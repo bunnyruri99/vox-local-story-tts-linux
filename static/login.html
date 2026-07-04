@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101725" />
+    <title>Đăng nhập · Vox Local</title>
+    <link rel="stylesheet" href="/assets/login.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <p class="eyebrow">WEB UI AUTH</p>
+        <h1>Đăng nhập Vox Local</h1>
+        <p class="lead">Nhập API key được cấp cho bạn, hoặc dùng Google nếu server đã cấu hình OAuth.</p>
+
+        <p id="message" class="message">Đang kiểm tra cấu hình đăng nhập...</p>
+
+        <form id="apiKeyForm" class="login-form hidden">
+          <label for="apiKeyInput">API key</label>
+          <input id="apiKeyInput" type="password" autocomplete="current-password" placeholder="vxl_..." />
+          <button class="primary-button" type="submit">Đăng nhập bằng API key</button>
+        </form>
+
+        <a id="googleLogin" class="google-button hidden" href="#">Đăng nhập bằng Google</a>
+
+        <div class="links">
+          <a href="/api">API guide</a>
+          <a href="/docs">Swagger</a>
+        </div>
+      </section>
+    </main>
+    <script src="/assets/login.js"></script>
+  </body>
+</html>

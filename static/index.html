@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101725" />
+    <title>Vox Local · Story TTS</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Trang chủ">
+          <span class="brand-mark" aria-hidden="true">◒</span>
+          <span>
+            <strong>Vox Local</strong>
+            <small>Story TTS workspace</small>
+          </span>
+        </a>
+        <div class="header-actions">
+          <span id="currentUser" class="user-pill hidden"></span>
+          <button id="logoutBtn" class="text-button hidden" type="button">Đăng xuất</button>
+          <span id="serverStatus" class="status-pill status-loading">Đang kiểm tra server</span>
+          <button id="refreshBtn" class="icon-button" type="button" title="Làm mới trạng thái" aria-label="Làm mới trạng thái">↻</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">STORY TEXT TO SPEECH</p>
+          <h1>Biến đoạn văn thành <em>giọng kể tự nhiên.</em></h1>
+          <p class="lead">Nhập truyện, tinh chỉnh nhịp đọc và tạo audio bằng giọng CapCut Cô Gái Hoạt Ngôn.</p>
+        </div>
+        <aside class="voice-card" aria-label="Giọng đang dùng">
+          <span class="voice-orb" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div>
+            <span class="muted-label">GIỌNG ĐANG CHỌN</span>
+            <strong id="voiceName">Cô Gái Hoạt Ngôn</strong>
+            <small id="voiceProviderInfo">Đang kiểm tra provider</small>
+          </div>
+        </aside>
+      </section>
+
+      <section class="workspace">
+        <div class="panel composer-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SOẠN NỘI DUNG</p>
+              <h2>Đoạn văn cần đọc</h2>
+            </div>
+            <button id="clearBtn" class="text-button" type="button">Xóa nội dung</button>
+          </div>
+
+          <label class="textarea-wrap" for="textInput">
+            <textarea id="textInput" spellcheck="true" placeholder="Ví dụ: Hôm nay, chúng ta sẽ cùng khám phá câu chuyện phía sau những tin đồn của giới giải trí…"></textarea>
+            <span id="charCount" class="char-count">0 / 3.800</span>
+          </label>
+
+          <div class="controls-grid">
+            <div class="control-block">
+              <div class="label-row">
+                <label for="rateInput">Tốc độ đọc</label>
+                <output id="rateOutput" for="rateInput">1.00×</output>
+              </div>
+              <input id="rateInput" type="range" min="0.5" max="2" step="0.05" value="1" />
+              <div class="range-labels"><span>Chậm · 0.50×</span><span>Nhanh · 2.00×</span></div>
+            </div>
+
+            <label class="control-block filename-control" for="filenameInput">
+              <span class="label-row"><span>Tên file <small>(tùy chọn)</small></span></span>
+              <input id="filenameInput" type="text" maxlength="100" placeholder="review-tap-01.mp3" />
+            </label>
+
+            <label class="control-block voice-select-control" for="voiceSelect">
+              <span class="label-row"><span>Giọng đọc</span></span>
+              <select id="voiceSelect">
+                <option value="">Cô Gái Hoạt Ngôn</option>
+              </select>
+            </label>
+          </div>
+
+          <section class="story-toolbox" aria-label="Công cụ đọc truyện">
+            <div class="toolbox-grid">
+              <label class="control-block" for="projectNameInput">
+                <span class="label-row"><span>Tên project</span></span>
+                <input id="projectNameInput" type="text" maxlength="80" placeholder="truyen-dem-khuya" />
+              </label>
+
+              <label class="control-block" for="presetSelect">
+                <span class="label-row"><span>Preset</span></span>
+                <select id="presetSelect">
+                  <option value="movie_drama">Review phim drama</option>
+                  <option value="romance_story">Kể chuyện tình cảm</option>
+                  <option value="horror_mystery">Kinh dị / bí ẩn</option>
+                  <option value="breaking_news">Tin nóng / bản tin</option>
+                  <option value="late_night">Tâm sự đêm khuya</option>
+                  <option value="long_series">Truyện audio nhiều chương</option>
+                  <option value="sales_hook">Hook bán hàng ngắn</option>
+                </select>
+              </label>
+
+              <label class="control-block" for="chunkSizeInput">
+                <span class="label-row"><span>Ký tự/đoạn</span></span>
+                <input id="chunkSizeInput" type="number" min="800" max="3800" step="100" value="3200" />
+              </label>
+            </div>
+
+            <label class="dictionary-control" for="dictionaryInput">
+              <span class="label-row"><span>Từ điển phát âm</span><small>dạng: AI=ây ai</small></span>
+              <textarea id="dictionaryInput" rows="4" spellcheck="false" placeholder="AI=ây ai&#10;NPC=en pi xi"></textarea>
+            </label>
+
+            <div class="toolbox-actions">
+              <button id="previewSelectionBtn" class="secondary-button" type="button">Nghe đoạn chọn</button>
+              <button id="buildQueueBtn" class="secondary-button" type="button">Chia đoạn</button>
+              <button id="generateQueueBtn" class="secondary-button" type="button">Tạo tất cả</button>
+              <button id="downloadMergedBtn" class="secondary-button" type="button" disabled>Tải MP3 gộp</button>
+            </div>
+
+            <div class="export-grid">
+              <label class="control-block" for="bgmInput">
+                <span class="label-row"><span>Nhạc nền</span><small>mp3/wav/m4a</small></span>
+                <input id="bgmInput" type="file" accept="audio/*" />
+              </label>
+
+              <div class="control-block">
+                <div class="label-row">
+                  <label for="bgmVolumeInput">Âm lượng nhạc</label>
+                  <output id="bgmVolumeOutput" for="bgmVolumeInput">18%</output>
+                </div>
+                <input id="bgmVolumeInput" type="range" min="0" max="60" step="1" value="18" />
+              </div>
+
+              <label class="control-block" for="subtitleModeSelect">
+                <span class="label-row"><span>Subtitle</span></span>
+                <select id="subtitleModeSelect">
+                  <option value="sentence">Theo câu</option>
+                  <option value="chunk">Theo đoạn</option>
+                </select>
+              </label>
+
+              <label class="control-block" for="subtitleDensitySelect">
+                <span class="label-row"><span>Nhịp chữ</span></span>
+                <select id="subtitleDensitySelect">
+                  <option value="short">2-4 từ / dòng</option>
+                  <option value="medium">4-7 từ / dòng</option>
+                  <option value="auto">Tự chia theo nhịp</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="toolbox-actions">
+              <button id="downloadBgmMixBtn" class="secondary-button" type="button" disabled>Tải WAV + nhạc nền</button>
+              <button id="exportSrtBtn" class="secondary-button" type="button" disabled>Export SRT</button>
+              <button id="exportAssBtn" class="secondary-button" type="button" disabled>Export ASS</button>
+              <button id="exportTimelineBtn" class="secondary-button" type="button" disabled>Export timeline JSON</button>
+              <button id="exportTikTokPackBtn" class="secondary-button" type="button" disabled>Export TikTok Pack</button>
+            </div>
+          </section>
+
+          <details id="securityDetails" class="security-box">
+            <summary>Thiết lập truy cập local</summary>
+            <div class="security-content">
+              <label for="apiKeyInput">X-API-Key <small>(chỉ cần khi `.env` đã bật key)</small></label>
+              <div class="key-row">
+                <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Dán LOCAL_API_KEY tại đây" />
+                <button id="toggleKeyBtn" class="icon-button compact" type="button" aria-label="Hiện hoặc ẩn API key">◉</button>
+              </div>
+              <p>Key chỉ được lưu trong trình duyệt của máy này để gọi server local.</p>
+            </div>
+          </details>
+
+          <div class="generate-row">
+            <p id="formMessage" class="form-message" role="status"></p>
+            <button id="generateBtn" class="primary-button" type="button">
+              <span class="button-icon" aria-hidden="true">✦</span>
+              <span id="generateText">Tạo audio</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="right-column">
+          <section class="panel player-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">BẢN XEM TRƯỚC</p>
+                <h2>Audio mới nhất</h2>
+              </div>
+              <span id="cacheBadge" class="cache-badge hidden"></span>
+            </div>
+
+            <div id="emptyPlayer" class="empty-player">
+              <span class="wave-placeholder" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <p>Audio sau khi tạo sẽ xuất hiện tại đây.</p>
+            </div>
+
+            <div id="audioPlayerWrap" class="audio-player-wrap hidden">
+              <div class="now-playing">
+                <span class="play-disc" aria-hidden="true">▶</span>
+                <div>
+                  <strong id="currentFileName">audio.mp3</strong>
+                  <small id="currentMeta">Cô Gái Hoạt Ngôn · 1.00×</small>
+                </div>
+              </div>
+              <audio id="audioPlayer" controls preload="metadata"></audio>
+              <div class="player-actions">
+                <button id="downloadBtn" class="secondary-button" type="button">Tải xuống</button>
+                <button id="copyLinkBtn" class="text-button" type="button">Sao chép đường dẫn local</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel tips-panel">
+            <p class="eyebrow">MẸO ĐỌC MƯỢT</p>
+            <ul>
+              <li>Ngắt đoạn bằng dòng trống để câu chuyện có nhịp tự nhiên hơn.</li>
+              <li>Với nội dung dài, nên tạo từng block khoảng 2.500–3.500 ký tự.</li>
+              <li>Dùng dấu phẩy, chấm và dấu ba chấm để điều khiển tiết tấu câu đọc.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+
+      <section id="queueSection" class="queue-section hidden">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">QUEUE ĐỌC TRUYỆN</p>
+            <h2>Danh sách đoạn</h2>
+          </div>
+          <div class="queue-summary">
+            <span id="queueSummary">0 đoạn</span>
+            <button id="clearQueueBtn" class="text-button" type="button">Xóa queue</button>
+          </div>
+        </div>
+        <div id="queueList" class="queue-list" aria-live="polite"></div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">THƯ VIỆN LOCAL</p>
+            <h2>Audio đã tạo gần đây</h2>
+          </div>
+          <div class="history-toolbar">
+            <button id="loadHistoryBtn" class="secondary-button" type="button">Làm mới thư viện</button>
+            <button id="clearCacheBtn" class="delete-secondary-button" type="button">Clear cache</button>
+          </div>
+        </div>
+        <div id="historyEmpty" class="history-empty">Chưa có audio nào trong cache local.</div>
+        <div id="historyList" class="history-list" aria-live="polite"></div>
+      </section>
+
+      <footer>
+        <span>Chạy trên máy local · Audio cache được lưu tại thư mục server.</span>
+        <a href="/api" target="_blank" rel="noreferrer">API guide</a>
+        <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+      </footer>
+    </main>
+
+    <template id="historyTemplate">
+      <article class="history-item">
+        <button class="history-play" type="button" title="Phát audio" aria-label="Phát audio">▶</button>
+        <div class="history-copy">
+          <p class="history-preview"></p>
+          <small class="history-meta"></small>
+        </div>
+        <div class="history-actions">
+          <button class="text-button history-download" type="button">Tải</button>
+          <button class="delete-button history-delete" type="button" title="Xóa cache">×</button>
+        </div>
+      </article>
+    </template>
+
+    <template id="queueTemplate">
+      <article class="queue-item">
+        <div class="queue-index"></div>
+        <div class="queue-copy">
+          <p class="queue-preview"></p>
+          <small class="queue-meta"></small>
+        </div>
+        <div class="queue-actions">
+          <span class="queue-status">Chờ</span>
+          <button class="text-button queue-generate" type="button">Tạo</button>
+          <button class="text-button queue-play" type="button" disabled>Phát</button>
+          <button class="text-button queue-download" type="button" disabled>Tải</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

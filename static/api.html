@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vox Local Story TTS API</title>
+    <link rel="stylesheet" href="/assets/api.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">EXTENSION API</p>
+          <h1>Vox Local Story TTS</h1>
+          <p class="lead">
+            Tài liệu API local để Chrome extension, automation script hoặc tool khác kết nối với hệ TTS
+            Cô Gái Hoạt Ngôn.
+          </p>
+        </div>
+        <nav class="hero-actions" aria-label="Liên kết nhanh">
+          <a href="/" class="button secondary">Web UI</a>
+          <a href="/docs" class="button">Swagger</a>
+          <a href="/openapi.json" class="button secondary">OpenAPI JSON</a>
+        </nav>
+      </header>
+
+      <section class="notice">
+        <strong>Base URL mặc định:</strong>
+        <code>http://127.0.0.1:8010</code>
+        <span>Nếu `.env` bật <code>LOCAL_API_KEY</code>, <code>LOCAL_API_KEYS</code> hoặc <code>LOCAL_API_KEY_HASHES</code>, mọi endpoint có nhãn Auth cần header <code>X-API-Key</code>.</span>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Flow khuyên dùng cho extension</h2>
+          <ol>
+            <li>Gọi <code>GET /health</code> để kiểm tra server và lấy <code>max_text_length</code>.</li>
+            <li>Gọi <code>GET /v1/voices</code> để chọn voice, ưu tiên <code>Cô Gái Hoạt Ngôn</code>.</li>
+            <li>Gọi <code>POST /v1/text/prepare</code> để chia block, bỏ emotion tag và tính rate.</li>
+            <li>Dùng <code>POST /v1/tts</code> cho một block hoặc <code>POST /v1/tts/batch</code> cho nhiều block.</li>
+            <li>Tải lại audio bằng <code>GET /v1/cache/{cache_id}?filename=...</code>.</li>
+          </ol>
+        </article>
+
+        <article class="card">
+          <h2>Endpoint tự mô tả</h2>
+          <p>
+            Extension nên đọc endpoint này thay vì hard-code giới hạn hoặc danh sách emotion tag.
+          </p>
+          <pre><code>GET /v1/extension/capabilities</code></pre>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2>Danh sách endpoint</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Path</th>
+                <th>Auth</th>
+                <th>Mục đích</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>GET</td><td><code>/health</code></td><td>No</td><td>Trạng thái server, provider, cache dir, version, giới hạn text.</td></tr>
+              <tr><td>GET</td><td><code>/api/ui/config</code></td><td>No</td><td>Cấu hình tối thiểu cho web UI.</td></tr>
+              <tr><td>GET</td><td><code>/v1/extension/capabilities</code></td><td>No</td><td>Manifest API chi tiết cho extension.</td></tr>
+              <tr><td>GET</td><td><code>/v1/auth/check</code></td><td>Yes</td><td>Kiểm tra API key, trả label key đang dùng.</td></tr>
+              <tr><td>GET</td><td><code>/auth/me</code></td><td>No</td><td>Kiểm tra session Web UI hiện tại.</td></tr>
+              <tr><td>POST</td><td><code>/auth/login</code></td><td>No</td><td>Đăng nhập Web UI bằng API key, trả session cookie.</td></tr>
+              <tr><td>POST</td><td><code>/auth/logout</code></td><td>No</td><td>Xóa session cookie Web UI.</td></tr>
+              <tr><td>GET</td><td><code>/v1/emotion-tags</code></td><td>No</td><td>Danh sách emotion tag, alias, rate multiplier và pause.</td></tr>
+              <tr><td>GET</td><td><code>/v1/voices</code></td><td>No</td><td>Danh sách voice CapCut/local có thể chọn.</td></tr>
+              <tr><td>GET</td><td><code>/v1/providers</code></td><td>Yes</td><td>Chi tiết provider đang khả dụng.</td></tr>
+              <tr><td>POST</td><td><code>/v1/text/prepare</code></td><td>Yes</td><td>Chuẩn hóa text, chia block, parse emotion tag.</td></tr>
+              <tr><td>POST</td><td><code>/v1/tts</code></td><td>Yes</td><td>Tạo một audio, trả binary MP3/WAV theo provider.</td></tr>
+              <tr><td>POST</td><td><code>/v1/tts/batch</code></td><td>Yes</td><td>Tạo nhiều audio block, trả JSON chứa cache/download URL.</td></tr>
+              <tr><td>GET</td><td><code>/v1/history?limit=12</code></td><td>Yes</td><td>Lịch sử audio cache gần đây.</td></tr>
+              <tr><td>GET</td><td><code>/v1/cache/{cache_id}</code></td><td>Yes</td><td>Tải audio cache. Có thể thêm query <code>filename</code>.</td></tr>
+              <tr><td>DELETE</td><td><code>/v1/cache/{cache_id}</code></td><td>Yes</td><td>Xóa một audio khỏi cache.</td></tr>
+              <tr><td>DELETE</td><td><code>/v1/cache</code></td><td>Yes</td><td>Xóa toàn bộ cache audio local.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Auth</h2>
+        <p>
+          Khi server bật <code>LOCAL_API_KEY</code>, <code>LOCAL_API_KEYS</code> hoặc <code>LOCAL_API_KEY_HASHES</code>, extension cần gửi header này cho các endpoint Auth.
+          <code>/health</code>, <code>/v1/voices</code> và <code>/v1/extension/capabilities</code> vẫn mở để extension có thể tự khám phá server.
+        </p>
+        <pre><code>fetch("http://127.0.0.1:8010/v1/providers", {
+  headers: { "X-API-Key": "&lt;LOCAL_API_KEY&gt;" }
+})</code></pre>
+        <p>
+          Web UI có thể bật session riêng bằng <code>WEB_AUTH_ENABLED=true</code>. Khi đó người dùng đăng nhập tại
+          <code>/login</code>; API gọi từ chính trình duyệt sẽ dùng cookie session, còn extension/app ngoài vẫn nên dùng
+          <code>X-API-Key</code>.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Google OAuth</h2>
+        <p>
+          Google OAuth là tùy chọn cho Web UI. Server yêu cầu <code>GOOGLE_OAUTH_CLIENT_ID</code>,
+          <code>GOOGLE_OAUTH_CLIENT_SECRET</code>, <code>GOOGLE_OAUTH_REDIRECT_URI</code> và allowlist email/domain.
+          Với LAN IP thuần, API key thường dễ vận hành hơn; Google OAuth phù hợp hơn khi dùng localhost hoặc domain HTTPS.
+        </p>
+        <pre><code>WEB_AUTH_ENABLED=true
+WEB_AUTH_PROVIDERS=api_key,google
+GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8010/auth/google/callback
+GOOGLE_ALLOWED_EMAILS=alice@gmail.com,bob@gmail.com</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>Voice</h2>
+        <p>
+          Gọi <code>/v1/voices</code> để lấy các trường cần gửi vào <code>/v1/tts</code>. Extension nên lưu nguyên
+          <code>voice_type</code> và <code>resource_id</code>.
+        </p>
+        <pre><code>GET /v1/voices</code></pre>
+        <pre><code>[
+  {
+    "name": "Cô Gái Hoạt Ngôn",
+    "voice_type": "BV074_streaming",
+    "resource_id": "7102355709945188865",
+    "language": "vi-VN",
+    "provider": "capcut",
+    "provider_label": "CapCut API qua K07VN/capcut-tts-api"
+  }
+]</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>Chuẩn bị text</h2>
+        <p>
+          Endpoint này không tạo audio. Nó giúp extension chia nội dung dài thành block hợp lệ, bỏ emotion tag khỏi text
+          gửi TTS và tính rate/pause cho từng block.
+        </p>
+        <pre><code>POST /v1/text/prepare
+Content-Type: application/json
+X-API-Key: &lt;LOCAL_API_KEY nếu có&gt;
+
+{
+  "text": "[buồn] Anh im lặng rất lâu...\n[cao trào] Nhưng mọi chuyện đổi khác.",
+  "rate": 1.0,
+  "chunk_size": 3200
+}</code></pre>
+        <pre><code>{
+  "total_chunks": 2,
+  "total_chars": 58,
+  "max_text_length": 3800,
+  "chunk_size": 3200,
+  "base_rate": 1.0,
+  "chunks": [
+    {
+      "index": 1,
+      "text": "Anh im lặng rất lâu...",
+      "char_count": 22,
+      "rate": 0.9,
+      "emotion_tag": "[buồn]",
+      "emotion_label": "Buồn",
+      "pause_after": 0.55
+    }
+  ]
+}</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>Tạo một audio</h2>
+        <pre><code>POST /v1/tts
+Content-Type: application/json
+X-API-Key: &lt;LOCAL_API_KEY nếu có&gt;
+
+{
+  "text": "Nội dung cần đọc",
+  "rate": 1.0,
+  "filename": "chuong-001.mp3",
+  "voice_type": "BV074_streaming",
+  "resource_id": "7102355709945188865",
+  "voice_name": "Cô Gái Hoạt Ngôn"
+}</code></pre>
+        <p>Response là file audio binary. Các header quan trọng:</p>
+        <ul>
+          <li><code>X-TTS-Cache</code>: <code>HIT</code> hoặc <code>MISS</code>.</li>
+          <li><code>X-TTS-Cache-Id</code>: ID để gọi <code>/v1/cache/{id}</code>.</li>
+          <li><code>X-TTS-Voice-Name</code>: voice thực tế đã dùng, URL-encoded.</li>
+          <li><code>X-TTS-Fallback</code>: <code>true</code> nếu provider chính lỗi và server fallback.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Tạo batch audio</h2>
+        <p>
+          Endpoint này phù hợp extension vì response là JSON, mỗi item có <code>download_url</code> trỏ về cache.
+          Giới hạn mặc định là 100 block/lần gọi.
+        </p>
+        <pre><code>POST /v1/tts/batch
+Content-Type: application/json
+X-API-Key: &lt;LOCAL_API_KEY nếu có&gt;
+
+{
+  "text": "Nội dung dài...",
+  "rate": 1.0,
+  "chunk_size": 3200,
+  "filename_prefix": "truyen-dem-khuya",
+  "voice_type": "BV074_streaming",
+  "resource_id": "7102355709945188865",
+  "voice_name": "Cô Gái Hoạt Ngôn"
+}</code></pre>
+        <pre><code>{
+  "total": 2,
+  "items": [
+    {
+      "index": 1,
+      "filename": "truyen-dem-khuya_part_001.mp3",
+      "cache_id": "sha256...",
+      "download_url": "/v1/cache/sha256...?filename=truyen-dem-khuya_part_001.mp3",
+      "content_type": "audio/mpeg",
+      "extension": "mp3",
+      "cache": "MISS",
+      "provider": "capcut",
+      "provider_label": "CapCut API qua K07VN/capcut-tts-api",
+      "voice": "Cô Gái Hoạt Ngôn",
+      "voice_type": "BV074_streaming",
+      "rate": 1.0,
+      "char_count": 3200,
+      "emotion_label": "Bình thường"
+    }
+  ]
+}</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>Emotion tag</h2>
+        <p>Các tag đặt ở đầu dòng/block. Server bỏ tag khỏi text audio và chỉ trả rate/pause đã tính.</p>
+        <pre><code>[buồn] Anh im lặng rất lâu...
+[cao trào] Nhưng điều anh nói sau đó khiến tất cả chết lặng.
+[thì thầm] Và bí mật ấy... chưa từng thuộc về riêng anh.</code></pre>
+        <p>Danh sách tag động:</p>
+        <pre><code>GET /v1/emotion-tags</code></pre>
+      </section>
+
+      <section class="section">
+        <h2>Manifest quyền cho Chrome extension</h2>
+        <pre><code>{
+  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ]
+}</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

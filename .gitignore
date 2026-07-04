@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+audio_cache/*
+!audio_cache/README.md
+providers/*
+!providers/README.md
+logs/*
+!logs/README.md
+run/*
+!run/README.md
+.pytest_cache/
+.DS_Store
